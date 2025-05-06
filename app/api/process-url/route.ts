@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import axios from "axios";
 
 interface FileInfo {
-  is_dir: number;
+  is_dir: string | number;
   fs_id: string | number;
   name: string;
   type: string;
-  size: number | string;
+  size: string | number;
   image: string;
   list: FileInfo[];
 }
@@ -24,7 +24,7 @@ interface DownloadResponse {
   status: string;
   download_link: {
     url_1: string;
-    url_2?: string;
+    url_2: string;
   };
 }
 
@@ -37,7 +37,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
-    // Step 1: Get file list using TeraDL API
+    // Get file list
+    console.log("Getting file list...");
     const fileListResponse = await axios.post<FileListResponse>(
       "https://teradl-api.dapuntaratya.com/generate_file",
       { url },
@@ -48,39 +49,42 @@ export async function POST(request: Request) {
       }
     );
 
-    if (
-      fileListResponse.data.status !== "success" ||
-      !fileListResponse.data.list
-    ) {
-      return NextResponse.json(
-        { error: "Failed to get file list" },
-        { status: 400 }
-      );
+    console.log(
+      "File list response:",
+      JSON.stringify(fileListResponse.data, null, 2)
+    );
+
+    if (fileListResponse.data.status !== "success") {
+      throw new Error("Failed to get file list");
     }
 
-    // Step 2: Find the first video file
-    const findVideoFile = (files: FileInfo[]): FileInfo | null => {
+    // Find the first file (not directory)
+    const findFile = (files: FileInfo[]): FileInfo | null => {
       for (const file of files) {
-        if (file.type === "video") {
+        // Convert is_dir to number for comparison
+        const isDir = Number(file.is_dir);
+        if (isDir === 0) {
           return file;
         }
         if (file.list && file.list.length > 0) {
-          const found = findVideoFile(file.list);
+          const found = findFile(file.list);
           if (found) return found;
         }
       }
       return null;
     };
 
-    const videoFile = findVideoFile(fileListResponse.data.list);
-    if (!videoFile) {
+    const file = findFile(fileListResponse.data.list);
+
+    if (!file) {
       return NextResponse.json(
-        { error: "No video file found" },
+        { error: "No files found in the shared folder" },
         { status: 404 }
       );
     }
 
-    // Step 3: Generate download link using TeraDL API
+    // Get download link
+    console.log("Getting download link...");
     const downloadResponse = await axios.post<DownloadResponse>(
       "https://teradl-api.dapuntaratya.com/generate_link",
       {
@@ -88,7 +92,7 @@ export async function POST(request: Request) {
         shareid: fileListResponse.data.shareid,
         timestamp: fileListResponse.data.timestamp,
         sign: fileListResponse.data.sign,
-        fs_id: videoFile.fs_id,
+        fs_id: file.fs_id,
       },
       {
         headers: {
@@ -97,28 +101,31 @@ export async function POST(request: Request) {
       }
     );
 
-    if (
-      downloadResponse.data.status !== "success" ||
-      !downloadResponse.data.download_link.url_1
-    ) {
-      return NextResponse.json(
-        { error: "Failed to generate download link" },
-        { status: 500 }
-      );
+    if (downloadResponse.data.status !== "success") {
+      throw new Error("Failed to get download link");
     }
 
-    // Return the direct video URL and file information
-    return NextResponse.json({
-      videoUrl:
-        downloadResponse.data.download_link.url_2 ||
-        downloadResponse.data.download_link.url_1,
-      fileName: videoFile.name,
-      fileSize: typeof videoFile.size === "number" ? videoFile.size : 0,
-    });
+    // Return the file URL and file information
+    const responseData = {
+      videoUrl: downloadResponse.data.download_link.url_1,
+      fileName: file.name,
+      fileSize: Number(file.size),
+      fileType: file.type,
+    };
+
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error("Error processing URL:", error);
+    if (axios.isAxiosError(error)) {
+      console.error("Axios error details:", {
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+    }
     return NextResponse.json(
-      { error: "Failed to process URL. Please try again." },
+      {
+        error: error instanceof Error ? error.message : "Failed to process URL",
+      },
       { status: 500 }
     );
   }

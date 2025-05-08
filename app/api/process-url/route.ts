@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     // Get file list
     console.log("Getting file list...");
     const fileListResponse = await axios.post<FileListResponse>(
-      "https://teradl-api.dapuntaratya.com/generate_file",
+      "http://vow8gskkckkccoc8og8004g8.49.13.208.218.sslip.io/generate_file",
       { url },
       {
         headers: {
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     // Get download link
     console.log("Getting download link...");
     const downloadResponse = await axios.post<DownloadResponse>(
-      "https://teradl-api.dapuntaratya.com/generate_link",
+      "http://vow8gskkckkccoc8og8004g8.49.13.208.218.sslip.io/generate_link",
       {
         uk: fileListResponse.data.uk,
         shareid: fileListResponse.data.shareid,

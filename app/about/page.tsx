@@ -1,6 +1,6 @@
 export default function AboutPage() {
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">About TeraBox Viewer</h1>
       <div className="prose prose-lg">
         <p className="mb-4">
@@ -19,9 +19,9 @@ export default function AboutPage() {
         </ul>
         <h2 className="text-2xl font-semibold mt-8 mb-4">How It Works</h2>
         <p className="mb-4">
-          Simply paste your TeraBox share link into our viewer, and we'll handle
-          the rest. Our service processes the link and provides you with a
-          direct video player, making it easy to watch your content instantly.
+          Simply paste your TeraBox share link into our viewer, and we&apos;ll
+          handle the rest. Our service processes the link and provides you with
+          a direct video player, making it easy to watch your content instantly.
         </p>
       </div>
     </div>

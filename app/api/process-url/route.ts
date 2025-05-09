@@ -40,7 +40,9 @@ export async function POST(request: Request) {
     // Get file list
     console.log("Getting file list...");
     const fileListResponse = await axios.post<FileListResponse>(
-      "http://vow8gskkckkccoc8og8004g8.49.13.208.218.sslip.io/generate_file",
+      // "http://vow8gskkckkccoc8og8004g8.49.13.208.218.sslip.io/generate_file",
+
+      "http://localhost:5001/generate_file",
       { url },
       {
         headers: {
@@ -86,7 +88,8 @@ export async function POST(request: Request) {
     // Get download link
     console.log("Getting download link...");
     const downloadResponse = await axios.post<DownloadResponse>(
-      "http://vow8gskkckkccoc8og8004g8.49.13.208.218.sslip.io/generate_link",
+      // "http://vow8gskkckkccoc8og8004g8.49.13.208.218.sslip.io/generate_link",
+      "http://localhost:5001/generate_link",
       {
         uk: fileListResponse.data.uk,
         shareid: fileListResponse.data.shareid,
